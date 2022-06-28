@@ -149,7 +149,7 @@ public class InteractionFinderTest {
 				iterations,
 				str(verifier.interaction),
 				str(foundInteraction)));
-			// TODO: fill
+			
 			results[i] = String.format(
 					message,
 					(i + 1),
@@ -158,8 +158,7 @@ public class InteractionFinderTest {
 					str(foundInteraction)
 					);
 		}
-		System.out.println("Fails: " + failCount);
-		// TODO: return somthing 
+		System.out.println("Fails: " + failCount); 
 		return results;
 	}
 
