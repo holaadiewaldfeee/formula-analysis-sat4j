@@ -23,6 +23,7 @@
 package org.spldev.assignment;
 
 import java.nio.file.*;
+import java.io.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -50,8 +51,8 @@ public class InteractionFinderTest {
 	private static final int maxT = 5;
 
 	private static final Random random = new Random(0);
-	private static final int interactionSize = 3;
-	private static final int iterations = 100;
+	private static final int interactionSize = 2;
+	private static final int iterations = 50;
 
 	private static final int sampleSize = 10;
 
@@ -93,46 +94,73 @@ public class InteractionFinderTest {
 	}
 
 	public static void main(String[] args) {
-		new InteractionFinderTest().printCompare();
+		String s = System.getProperty("user.home");
+		Path path = Paths.get(s,"Desktop/daten.csv");
+		
+		String[] results = InteractionFinderTest.printCompare();
+		
+		try(BufferedWriter writeBuf = Files.newBufferedWriter(path)){
+			writeBuf.write("testNum,testRes,failingInt,foundInt\n");
+			for(int i = 0 ; i < results.length-1 ; i++) {
+				String line = results[i];
+				writeBuf.write(line);
+			}
+			writeBuf.close();
+		}catch(IOException e) {
+			System.out.printf("IO: %s%n", e.getMessage());
+		}
+		
+		
 	}
 
-	public void printCompare() {
+	public static String[] printCompare() {	
+		String[] results = new String[iterations]; 
 		int failCount = 0;
-		final ModelRepresentation model = getModel(Paths.get("src/test/resources/GPL/model.xml"));
-//		final ModelRepresentation model = getModel(numberOfFeatures);
+		final ModelRepresentation model = getModel(Paths.get("src/test/resources/GPL/model.xml")); //modeltest.xml
+//		final ModelRepresentation model = getModel(20);
 		final LiteralList core = model.get(new CoreDeadAnalysis());
 		for (int i = 0; i < iterations; i++) {
-			final List<LiteralList> sample = createRandomSample(model, sampleSize);
-//			final Collection<LiteralList> sample = createTWiseSample(model, 2);
+//			final List<LiteralList> sample = createRandomSample(model, sampleSize);
+			final List<LiteralList> sample = createTWiseSample(model, 2);
 
-			ConfigurationVerifier verifier = new ConfigurationVerifier(chooseInteraction(random, sample,
-				interactionSize));
+			LiteralList failInteraction = chooseInteraction(random, sample,	interactionSize);
+			ConfigurationVerifier verifier = new ConfigurationVerifier(failInteraction);
 
 //			final InteractionFinder finder = new InteractionFinder(sample,
 //				createRandomCompletor(model), verifier);
 
-			final InteractionFinderNaive finder = new InteractionFinderNaive(sample,
+			final AbstractInteractionFinder finder = new InteractionFinderNaive(sample, //InteractionFinderNaive     InteractionFinderSplit
 				createCompletor(model), verifier);
 			finder.setCore(core);
 
-			LiteralList result = finder.find(verifier.interaction.size());
-//			LiteralList result = finder.findTWise(verifier.interaction.size());
-//			LiteralList result = finder.findInteraction(maxT);
+			LiteralList foundInteraction = finder.find(verifier.interaction.size());
+//			System.out.println(foundInteraction); 
+//			System.out.println(failInteraction); 
 
 			String message;
-			if (verifier.interaction.equals(result)) {
-				message = "%d/%d OK   %s > %s";
+			if (failInteraction.equals(foundInteraction)) {
+				message = "%d/%d OK   %s > %s %n";
 			} else {
 				failCount++;
-				message = "%d/%d FAIL %s > %s";
+				message = "%d/%d FAIL %s > %s %n";
 			}
 			System.out.println(String.format(message,
 				(i + 1),
 				iterations,
 				str(verifier.interaction),
-				str(result)));
+				str(foundInteraction)));
+			// TODO: fill
+			results[i] = String.format(
+					message,
+					(i + 1),
+					iterations,
+					str(verifier.interaction),
+					str(foundInteraction)
+					);
 		}
 		System.out.println("Fails: " + failCount);
+		// TODO: return somthing 
+		return results;
 	}
 
 	private static String str(LiteralList findTWise) {
