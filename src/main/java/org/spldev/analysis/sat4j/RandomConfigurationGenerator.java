@@ -35,8 +35,6 @@ import org.spldev.util.job.*;
  */
 public abstract class RandomConfigurationGenerator extends AbstractConfigurationGenerator {
 
-	protected boolean satisfiable = true;
-
 	public RandomConfigurationGenerator() {
 		super();
 		setRandom(new Random());
@@ -45,26 +43,21 @@ public abstract class RandomConfigurationGenerator extends AbstractConfiguration
 	@Override
 	protected void init(InternalMonitor monitor) {
 		super.init(monitor);
-		satisfiable = true;
 	}
 
+		//HERE
 	@Override
 	public LiteralList get() {
-		if (!satisfiable) {
-			return null;
-		}
 		reset();
 		solver.shuffleOrder(random);
 		final LiteralList solution = solver.findSolution();
 		if (solution == null) {
-			satisfiable = false;
 			return null;
 		}
 		if (!allowDuplicates) {
 			try {
 				forbidSolution(solution.negate());
 			} catch (final RuntimeContradictionException e) {
-				satisfiable = false;
 			}
 		}
 		return solution;

@@ -142,6 +142,7 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solution
 	 */
 	@Override
 	public void reset() {
+		
 		solver.reset();
 		if (solutionHistory != null) {
 			solutionHistory.clear();

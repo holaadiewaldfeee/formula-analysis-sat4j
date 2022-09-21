@@ -52,7 +52,6 @@ public class FastRandomConfigurationGenerator extends RandomConfigurationGenerat
 	protected void resetSolver(Sat4JSolver solver) {
 		super.resetSolver(solver);
 		solver.setSelectionStrategy(originalSelectionStrategy);
-		originalSelectionStrategy = null;
 	}
 
 }
