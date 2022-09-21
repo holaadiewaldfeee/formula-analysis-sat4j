@@ -243,6 +243,7 @@ public class InteractionFinderTest {
 				// HERE verifier contains failing interaction
 				ConfigurationVerifier verifier = new ConfigurationVerifier(failInteraction);
 
+				
 				final AbstractInteractionFinder finder = new InteractionFinderNaive(sample,
 						createCompletor(model, completorRandom), verifier);
 
