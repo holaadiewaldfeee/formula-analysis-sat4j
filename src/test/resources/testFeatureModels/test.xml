@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<featureModel>
+	<properties>
+		<calculations key="tautology" value="true"/>
+		<calculations key="auto" value="true"/>
+		<graphics key="autolayoutconstraints" value="false"/>
+		<graphics key="legendautolayout" value="true"/>
+		<calculations key="redundant" value="true"/>
+		<graphics key="showshortnames" value="false"/>
+		<graphics key="layout" value="horizontal"/>
+		<graphics key="showcollapsedconstraints" value="true"/>
+		<graphics key="legendhidden" value="false"/>
+		<calculations key="constraints" value="true"/>
+		<graphics key="layoutalgorithm" value="1"/>
+		<calculations key="features" value="true"/>
+	</properties>
+	<struct>
+		<and abstract="true" mandatory="true" name="Root">
+			<graphics key="collapsed" value="false"/>
+			<feature mandatory="true" name="A"/>
+			<feature mandatory="true" name="B"/>
+			<feature name="C"/>
+			<feature name="D"/>
+			<feature name="E"/>
+			<feature name="F"/>
+			<feature name="G"/>
+			<feature name="H"/>
+			<feature name="I"/>
+			<feature name="J"/>
+		</and>
+	</struct>
+	<constraints>
+		<rule>
+			<conj>
+				<eq>
+					<var>C</var>
+					<var>D</var>
+				</eq>
+				<conj>
+					<eq>
+						<var>D</var>
+						<var>E</var>
+					</eq>
+					<conj>
+						<eq>
+							<var>E</var>
+							<var>F</var>
+						</eq>
+						<conj>
+							<eq>
+								<var>F</var>
+								<var>G</var>
+							</eq>
+							<conj>
+								<eq>
+									<var>G</var>
+									<var>H</var>
+								</eq>
+								<eq>
+									<var>H</var>
+									<var>I</var>
+								</eq>
+							</conj>
+						</conj>
+					</conj>
+				</conj>
+			</conj>
+		</rule>
+		<rule>
+			<imp>
+				<var>A</var>
+				<not>
+					<var>J</var>
+				</not>
+			</imp>
+		</rule>
+	</constraints>
+</featureModel>
