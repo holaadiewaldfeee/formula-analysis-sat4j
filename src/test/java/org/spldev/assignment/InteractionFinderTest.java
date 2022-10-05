@@ -62,9 +62,9 @@ public class InteractionFinderTest {
 
 	private static final Random randomSeed = new Random(314159);
 	private static final int interactionSize = 2;
-	private static final int iterations = 1;
+	private static final int iterations = 100;
 
-	private static final int sampleSize = 2;
+//	private static final int sampleSize = 100;
 
 	private static CSVWriter writer;
 
@@ -75,8 +75,6 @@ public class InteractionFinderTest {
 			this.interaction = interaction;
 		}
 
-		// HERE get true if configuration not contains failing interaction (if
-		// configuration is valid)
 		@Override
 		public boolean test(LiteralList configuration) {
 			return !configuration.containsAll(interaction);
@@ -85,27 +83,13 @@ public class InteractionFinderTest {
 	}
 
 	public static void main(String[] args) throws IOException {
-//		String s = System.getProperty("user.home");
-//		Path path = Paths.get(s, "Desktop/daten.csv");
 
 		writer = new CSVWriter();
 		writer.setOutputFile(Paths.get(System.getProperty("user.home"), "Desktop/daten.csv"));
-		writer.setHeader("Model", "testi", "testn", "testRes", "failingInteraction", "foundInteraction", "FIListLength",
-				"configCount", "interactionCount", "time");
+		writer.setHeader("Model", "Testi", "Testn", "TestRes", "FailingInteraction", "FoundInteraction", "FIListLength",
+				"ConfigCount", "InteractionCount", "Time");
 
 		InteractionFinderTest.printCompare();
-
-//		try (BufferedWriter writeBuf = Files.newBufferedWriter(path)) {
-//			writeBuf.write(String.format(
-//					"testi;testn;testRes;failingInteraction;foundInteraction;FIListLength;configCount;time;%n"));
-//			for (int i = 0; i < results.length; i++) {
-//				String line = results[i];
-//				writeBuf.write(line);
-//			}
-//			writeBuf.close();
-//		} catch (IOException e) {
-//			System.out.printf("IO: %s%n", e.getMessage());
-//		}
 
 	}
 
@@ -177,30 +161,38 @@ public class InteractionFinderTest {
 	}
 
 	public static void printCompare() throws IOException {
-//		String[] results = new String[iterations];
+
 		int failCount = 0;
+		
+		ModelRepresentation model100 = getModel(100);
 
 		ArrayList<String> models = new ArrayList<>();
-		models.add("src/test/resources/GPL/model.xml");
-		models.add("src/test/resources/testFeatureModels/breakfast.xml");
-//		models.add("src/test/resources/testFeatureModels/busybox.xml");
+//		models.add("src/test/resources/testFeatureModels/automotive01.xml"); 			//automotive01
+//		models.add("src/test/resources/testFeatureModels/automotive02.xml");  			//automotive02
+//		models.add("src/test/resources/testFeatureModels/release-2.0.0.kmax.dimacs"); 	//axtls
+//		models.add("src/test/resources/testFeatureModels/berkeley_db.xml");				//berkeley db
+		models.add("src/test/resources/testFeatureModels/breakfast.xml"); 				//breakfast
+//		models.add("src/test/resources/testFeatureModels/1_9_2.kconfigreader.dimacs"); 	//busybox
+//		models.add("src/test/resources/testFeatureModels/eshop.xml"); 					//eshop
+//		models.add("src/test/resources/testFeatureModels/financial.xml"); 				//financial services
+//		models.add("src/test/resources/testFeatureModels/GPL.xml"); 					//GPL
+//		models.add("src/test/resources/testFeatureModels/2.6.33.3.knueppel2017.xml"); 	//linux
+//		models.add("src/test/resources/testFeatureModels/soletta_pett2021.xml"); 		//soletta
 
+		
 		for (String modelName : models) {
 
 			long startTimeLoadModel = System.nanoTime();
 //
-			ModelRepresentation model = getModel(Paths.get(modelName)); // modeltest.xml
-//		ModelRepresentation model = getModel(Paths.get("src/test/resources/testFeatureModels/busybox.xml")); // modeltest.xml
-//		ModelRepresentation model = getModel(100);
+			ModelRepresentation model = getModel(Paths.get(modelName));
+//			ModelRepresentation model = getModel(Paths.get("src/test/resources/testFeatureModels/busybox.xml"));
+//			ModelRepresentation model = getModel(100);
 
-//		System.out.println(model.getFormula().toString());
 			VariableMap variables = model.getVariables().clone();
-			System.out.println(variables.toString());
 
 			final List<LiteralList> atomicSets = model.get(new AtomicSetAnalysis());
 			LiteralList coreDead = atomicSets.get(0);
 			List<LiteralList> atomicSetsWithoutCore = atomicSets.subList(1, atomicSets.size());
-			System.out.println("atomic sets: " + atomicSets);
 
 			Formula formulaWithoutAtomicSets = Trees.cloneTree(model.getFormula());
 			Trees.traverse(formulaWithoutAtomicSets, new AtomicSetReplacer(variables, atomicSetsWithoutCore));
@@ -219,38 +211,30 @@ public class InteractionFinderTest {
 			model = new ModelRepresentation(formulaWithoutAtomicSets);
 			variables = variablesWithoutAtomicSets;
 
-			System.out.println(variablesWithoutAtomicSets.toString());
-			System.out.println(Trees.traverse(formulaWithoutAtomicSets, new TreePrinter()));
-
-			// System.out.println("core/dead: " + coreDead.size());// .size()
-
-			long nextLong = randomSeed.nextLong();
+			long initialRandomSeed = randomSeed.nextLong();
+			long completorRandomSeed = randomSeed.nextLong();
+			
 
 			for (int i = 0; i < iterations; i++) {
 
 				long startIterationTime = System.nanoTime();
 
-				Random sampleRandom = new Random(i + nextLong);
+				Random sampleRandom = new Random(i + initialRandomSeed);
 
-				// HERE add failingConfig
 				final List<LiteralList> input = generateInput(model, interactionSize, coreDead, sampleRandom);
 				LiteralList failInteraction = input.get(0);
 				List<LiteralList> sample = input.subList(1, 3);
-//			final List<LiteralList> sample = createRandomSample(model, 1, sampleRandom); //createTWiseSample(model, 2);
+				
+//				final List<LiteralList> sample = createRandomSample(model, 1, sampleRandom); //createTWiseSample(model, 2);
 
-				Random completorRandom = new Random(i + nextLong);
-
-				// HERE verifier contains failing interaction
+				Random completorRandom = new Random(i + completorRandomSeed);
+				
 				ConfigurationVerifier verifier = new ConfigurationVerifier(failInteraction);
 
-				
-				final AbstractInteractionFinder finder = new InteractionFinderNaive(sample,
+				final AbstractInteractionFinder finder = new InteractionFinderSplit(sample, //InteractionFinderRandom
 						createCompletor(model, completorRandom), verifier);
 
 				finder.setCore(coreDead);
-
-//			System.out.println(model.getVariables().toString());
-//			System.out.println("core/dead: " + coreDead);// .size()
 
 				int numberOfFeats = variables.size();
 
@@ -258,27 +242,11 @@ public class InteractionFinderTest {
 						numberOfFeats - coreDead.size());
 
 				int foundInteractionListLength = foundInteraction.size();
-				System.out.println("ListLength: " + foundInteractionListLength);
-
 				int configurationCount = finder.getConfigurationCount() - sample.size();
-				System.out.println("#configs: " + configurationCount);
 
 				long finishIterationTime = System.nanoTime();
 				long timeElapsedIteration = finishIterationTime - startIterationTime;
 				double elapsedTimeInSecondIteration = (timeElapsedIteration / 1_000_000) / 1_000.0;
-//			System.out.println("Time: " + timeElapsedIteration);
-
-//			String message;
-//			if (foundInteraction.contains(failInteraction)) { // failInteraction.equals(foundInteraction)
-//				message = "%d/%d %s   %s > %s %n";
-//			} else {
-//				failCount++;
-//				message = "%d/%d FAIL %s > %s %n";
-//			}
-
-				System.out.println(String.format("%d/%d %s   %s > %s %n", (i + 1), iterations,
-						foundInteraction.contains(failInteraction) ? "OK" : "FAIL", str(verifier.interaction),
-						str(foundInteraction)));
 
 				writer.createNewLine();
 				writer.addValue(modelName);
@@ -292,24 +260,15 @@ public class InteractionFinderTest {
 				writer.addValue(toStr(finder.getInteractionCounter()));
 				writer.addValue(elapsedTimeInSecondIteration);
 				writer.flush();
-//			String message = "%d;%d;%s;%s;%s;%s;%s;%f;%n";
-//			results[i] = String.format(message, //
-//					(i + 1), //
-//					iterations, //
-//					foundInteraction.contains(failInteraction) ? "OK" : "FAIL", //
-//					str(verifier.interaction), //
-//					str(foundInteraction), //
-//					foundInteractionListLength, //
-//					configurationCount, //
-//					elapsedTimeInSecondIteration);
-			}
-			System.out.println("Fails: " + failCount);
 
+			}
 			long finishTime = System.nanoTime();
 			long timeElapsed = finishTime - startTimeLoadModel;
-			System.out.println("Time: " + timeElapsed);
 			double elapsedTimeInSecond = (timeElapsed / 1_000_000) / 1_000.0;
-			System.out.println(elapsedTimeInSecond + " seconds");
+			
+			
+			System.out.println("Fails: " + failCount);
+			System.out.println("Time: " + elapsedTimeInSecond + " seconds");
 		}
 	}
 
@@ -381,65 +340,5 @@ public class InteractionFinderTest {
 		generator.setLimit(1);
 		return generator;
 	}
-
-//	private static LiteralList chooseInteraction(Random random, List<LiteralList> sample, int interactionSize,
-//			LiteralList coreDead) {
-//		final LiteralList solution = sample.get(random.nextInt(sample.size()));
-//
-//		return new LiteralList(Stream.generate(() -> (random.nextInt(solution.size()))) //
-//				.mapToInt(Integer::intValue) //
-//				.distinct() //
-//				.limit(interactionSize) //
-//				.map(l -> solution.get(l)) //
-//				.toArray());
-//	}
-
-//	public static SolutionUpdater createRandomCompletor(ModelRepresentation rep) {
-//	return new SimpleRandomConfigurationGenerator(rep.getVariables().size());
-//}
-
-//	private static List<LiteralList> createRandomSample(ModelRepresentation rep, int size) {
-//	return createRandomSample(rep, size, new Random(0));
-//}
-
-//private static List<LiteralList> createRandomSample(ModelRepresentation rep, int size, Random random) {
-//	RandomConfigurationGenerator generator = new FastRandomConfigurationGenerator();
-//	generator.setAllowDuplicates(false);
-//	generator.setRandom(random);
-//	generator.setLimit(size);
-//	return rep.getResult(generator).map(SolutionList::getSolutions).orElse(Logger::logProblems);
-//}
-
-//private static List<LiteralList> createTWiseSample(ModelRepresentation rep, int t) {
-//	TWiseConfigurationGenerator generator = new TWiseConfigurationGenerator();
-//	generator.setRandom(new Random(0));
-//	generator.setT(t);
-//	return rep.getResult(generator).map(SolutionList::getSolutions).orElse(Logger::logProblems);
-//}
-
-//	private static class SimpleRandomConfigurationGenerator implements SolutionUpdater {
-//	private final int configurationSize;
-//	private Random random;
-//
-//	public SimpleRandomConfigurationGenerator(int configurationSize, Random random) {
-//		this.configurationSize = configurationSize;
-//		this.random = random;
-//	}
-//
-//	@Override
-//	public Optional<LiteralList> complete(LiteralList partial) {
-//		final int[] assignment = new int[configurationSize];
-//		for (int i = 0; i < assignment.length; i++) {
-//			assignment[i] = random.nextBoolean() ? (i + 1) : -(i + 1);
-//		}
-//		if (partial != null) {
-//			for (int i = 0; i < partial.size(); i++) {
-//				int fixedLiteral = partial.get(i);
-//				assignment[Math.abs(fixedLiteral) - 1] = fixedLiteral;
-//			}
-//		}
-//		return Optional.of(new LiteralList(assignment, Order.INDEX, false));
-//	}
-//}
 
 }
